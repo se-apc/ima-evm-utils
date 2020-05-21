@@ -1,6 +1,7 @@
 #!/bin/sh
 
-source /opt/poky/rzn1/environment-setup-armv7vehf-vfpv4d16-poky-linux-gnueabi
+source /opt/poky/2.7.3/environment-setup-armv7vet2hf-vfpv4d16-poky-linux-gnueabi
+#environment-setup-armv7vehf-vfpv4d16-poky-linux-gnueabi
 
 bash autogen.sh
 ./configure --host=arm-poky-linux-gnueabi --disable-debug
@@ -8,16 +9,15 @@ make
 echo "LDFLAGS = $LDFLAGS"
 target_alias=lces2
 #bash autogen.sh
-#EXTRA_OPTS=--gc-sections 
 
-LDFLAGS="-Wl,-L${SDKTARGETSYSROOT}/usr/lib/ $LDFLAGS -Wl,--gc-sections"
-#$CC -static -Os -o evmctl.static -include config.h src/evmctl.c src/libimaevm.c -lcrypto -lkeyutils -ldl
-echo "$CC -static -Os -ffunction-sections -fdata-sections $LDFLAGS -o evmctl.static -include config.h src/evmctl.c src/libimaevm.c -lcrypto -lkeyutils -ldl"
-#${CC} -static -Os -ffunction-sections -fdata-sections $LDFLAGS -o evmctl.static -include config.h src/evmctl.c src/libimaevm.c -lcrypto -lkeyutils -ldl
-${CC} -static -Os -ffunction-sections -fdata-sections $LDFLAGS -o evmctl.static -include config.h src/evmctl.c src/libimaevm.c -lcrypto -lkeyutils -ldl -pthread -limaevm -lssl
+LDFLAGS="-Wl,-L${SDKTARGETSYSROOT}/usr/lib/ -Wl,--gc-sections -ffunction-sections -fdata-sections $LDFLAGS"
+
+LX="${SDKTARGETSYSROOT}/usr/lib"
+LIBS="-pthread -lkeyutils -ldl -lc -Wl,--start-group ${LX}/libcrypto.a -Wl,--end-group"
+LIBS=" ${LIBS} ${LIBS}"
+${CC} ${CFLAGS} -Wall -Os ${LDFLAGS} -I./src -o ./evmctl.static ${LDFLAGS} -include config.h \
+  ./src/evmctl.c ./src/libimaevm.c  ${LIBS}
 ${STRIP} ./evmctl.static
-#-limaevm
-#-lssl 
 
 #dynamically linked evmctl = 90616
 #statically linked evmctl.static = 2.8M
@@ -41,3 +41,4 @@ ${STRIP} ./evmctl.static
 # copy_exec /etc/ima_policy
 # copy_exec /bin/keyctl
 # copy_exec /usr/bin/evmctl /bin/evmctl
+bash inst.sh
